@@ -1,16 +1,47 @@
 'use client';
 
-import {useState} from 'react';
+import React, {useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {processFaceRecognition} from '@/ai/flows/process-face-recognition';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {Icons} from '@/components/icons';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
+
+
+interface InputWithIconProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  icon?: LucideIcon;
+}
+
+const InputWithIcon = React.forwardRef<HTMLInputElement, InputWithIconProps>(
+  ({ className, type, placeholder, icon: Icon, ...props }, ref) => {
+    return (
+      <div className="relative">
+        {Icon && (
+          <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        )}
+        <Input
+          type={type}
+          placeholder={placeholder}
+          className={cn(
+            "pl-9",
+            className,
+            Icon && "pl-9"
+          )}
+          ref={ref}
+          {...props}
+        />
+      </div>
+    );
+  }
+);
+InputWithIcon.displayName = "InputWithIcon";
 
 export default function Home() {
-  const [videoUrl, setVideoUrl] = useState('');
-  const [referenceImageUrl, setReferenceImageUrl] = useState('');
+  const [videoFileId, setVideoFileId] = useState('');
+  const [referenceImageFileId, setReferenceImageFileId] = useState('');
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,9 +51,10 @@ export default function Home() {
     setError(null);
 
     try {
+      // Ensure file IDs are passed, not URLs
       const result = await processFaceRecognition({
-        videoUrl,
-        referenceImageUrl,
+        videoUrl: videoFileId, // Now using file ID as videoUrl
+        referenceImageUrl: referenceImageFileId, // Now using file ID as referenceImageUrl
       });
       setTimestamps(result.timestamps);
     } catch (e: any) {
@@ -44,24 +76,26 @@ export default function Home() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="videoUrl">Video URL</label>
-            <Input
-              id="videoUrl"
-              type="url"
-              placeholder="Enter video URL"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
+            <label htmlFor="videoFileId">Video File ID (Google Drive)</label>
+            <InputWithIcon
+              id="videoFileId"
+              type="text"
+              placeholder="Enter Google Drive File ID for the video"
+              value={videoFileId}
+              onChange={(e) => setVideoFileId(e.target.value)}
+              icon={Icons.file}
             />
           </div>
 
           <div className="flex flex-col space-y-2">
-            <label htmlFor="referenceImageUrl">Reference Image URL</label>
-            <Input
-              id="referenceImageUrl"
-              type="url"
-              placeholder="Enter reference image URL"
-              value={referenceImageUrl}
-              onChange={(e) => setReferenceImageUrl(e.target.value)}
+            <label htmlFor="referenceImageFileId">Reference Image File ID (Google Drive)</label>
+            <InputWithIcon
+              id="referenceImageFileId"
+              type="text"
+              placeholder="Enter Google Drive File ID for the reference image"
+              value={referenceImageFileId}
+              onChange={(e) => setReferenceImageFileId(e.target.value)}
+              icon={Icons.image}
             />
           </div>
 
